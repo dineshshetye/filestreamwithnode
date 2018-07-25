@@ -1,0 +1,6 @@
+{
+  "name": "filestreamwithnode",
+  "short_name": "filestreamwithnode",
+  "start_url": "/",
+  "display": "standalone"
+}

@@ -1,0 +1,94 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-styles/color.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+
+
+<dom-module id="filestreamwithnode-app">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+  
+    <style is="custom-style">
+      paper-button.indigo {
+        background-color: var(--paper-indigo-500);
+        color: white;
+        --paper-button-raised-keyboard-focus: {
+          background-color: var(--paper-pink-a200) !important;
+          color: white !important;
+        }
+        ;
+      }
+    </style>
+
+    <iron-ajax id="downloadFileFromServer" 
+              url="/downloadFileFromServer"
+              method="POST" 
+              handle-as="blob"
+              timeout=10000 
+              on-response="downloadFileFromServerResponse">
+    </iron-ajax>
+
+    <paper-button raised class="indigo" on-tap="downloadFileFromServer">Download File</paper-button>
+
+  </template>
+
+  <script>
+    /**
+     * @customElement
+     * @polymer
+     */
+    class FilestreamwithnodeApp extends Polymer.Element {
+      static get is() { return 'filestreamwithnode-app'; }
+      static get properties() {
+        return {
+          prop1: {
+            type: String,
+            value: 'filestreamwithnode-app'
+          }
+        };
+      }
+
+      
+      /**
+        * Extract filename value from Content-disposition header
+        */
+      getFileNameFromHttpResponse(contentDispositionHeader) {
+          var result = contentDispositionHeader.split(';')[1].trim().split('=')[1];
+          return result.replace(/"/g, '');
+      }
+
+
+      downloadFileFromServer() {
+        this.$.downloadFileFromServer.generateRequest();
+      }
+      
+      downloadFileFromServerResponse(e, request) {
+        console.log(e.detail.response);
+
+        /* var headers = request.xhr.getAllResponseHeaders();
+        console.log(headers); */
+        
+        // https://nehalist.io/downloading-files-from-post-requests/
+        var disposition = request.xhr.getResponseHeader('content-disposition');
+        var filename = this.getFileNameFromHttpResponse(disposition);
+
+        // The actual download
+        var blob = new Blob([e.detail.response], { type: 'text/csv; charset=utf-8' });
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = filename;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+    }
+
+    window.customElements.define(FilestreamwithnodeApp.is, FilestreamwithnodeApp);
+  </script>
+</dom-module>
